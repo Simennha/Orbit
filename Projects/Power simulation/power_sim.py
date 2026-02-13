@@ -122,14 +122,26 @@ Notes / common pitfalls
       mean_val = np.mean(power_vals)
 
 """
+# inputs
+v0 = [1, 0, 0]                                  # initial vector
+omega_xyz = [0,0,0]      # angular velocity
 
-max_power = 3*7270                    # Max power generation
-innstrålet_over_areal = 1361000*0.3*0.3*0.295 #Stråling*areal*effektivitet
-time = 60 #Simulasjonstid
-d_time = 0.2 #time steps
-sun_vector = (1.0, 0.0, 0.0)
+find_best_rot_vec = False     
+
+deployed = ""
+if deployed == "n":
+    areal = 0.1
+else: 
+    areal = 0.3
+
+max_power = areal*10*7270                       #Max power generation
+innstrålet_over_areal = 1361000*0.3*areal*0.295 #Stråling*areal*effektivitet
+time = 100                                   #Simulasjonstid i sekunder
+d_time = 0.2                                    #time steps
+sun_vector = (1.0, 0.0, 0.0)                    #sun vector ref.
 
 
+# functions
 def rodrigues_rotation_matrix(axis, angle):
     axis = np.asarray(axis, dtype=float)
     axis_norm = np.linalg.norm(axis)
@@ -148,7 +160,7 @@ def rodrigues_rotation_matrix(axis, angle):
     I = np.eye(3)
     return I + np.sin(angle) * K + (1 - np.cos(angle)) * (K @ K)
 
-def simulate_cos_angle(v0, omega_xyz, t_end = time, dt=d_time, sun_vector=(1.0, 0.0, 0.0)):
+def simulate_cos_angle(v0, omega_xyz, t_end = time, dt=d_time, sun_vector = sun_vector):
     v = np.asarray(v0, dtype=float)
     omega = np.asarray(omega_xyz, dtype=float)
     sun = np.asarray(sun_vector, dtype=float)
@@ -187,10 +199,9 @@ def simulate_cos_angle(v0, omega_xyz, t_end = time, dt=d_time, sun_vector=(1.0, 
 
     return t, power_vals, mean_val
 
-
-def optimal_rotation_vector(v0, do = True, search_range=range(-10, 11), t_end = time, dt= d_time, sun_vector=(1.0, 0.0, 0.0)):
+def optimal_rotation_vector(v0, do = True, search_range=range(-10, 11), t_end = time, dt= d_time, sun_vector = sun_vector):
     if do == False: 
-        return None, 0
+        return None, None, 0
     
     best_mean = -np.inf
     best_vec = None
@@ -207,33 +218,35 @@ def optimal_rotation_vector(v0, do = True, search_range=range(-10, 11), t_end = 
                     best_vals = power_vals
                     best_mean = mean_cos
                     best_vec = [i*0.1, j*0.1, k*0.1]
-    return best_vals, best_vec, best_mean
+    return best_vals, best_vec, best_mean      
 
 
-# inputs
-v0 = [0, 2, 5]                 # initial vector
-omega_xyz = [0.1, 0.1, 0.1]      # angular velocity
-
-find_best_rot_vec = True           
-
-
-t, power_vals, mean_cos = simulate_cos_angle(
-    v0, omega_xyz
-)
+#simulasjon
+t, power_vals, mean_cos = simulate_cos_angle(v0, omega_xyz)
 
 best_power_vals, optimal_rot_vec, best_mean = optimal_rotation_vector(v0, do = find_best_rot_vec)
 
 
-
+#output
 print("Gjennomsnittlig cos-verdi når negative cos-verdier er satt til 0:", mean_cos)
 print(f'Power generation: {round(np.mean(power_vals), 3)} mW')
-print(f'The optimal vector for v0 is {optimal_rot_vec}, which gives the mean value {round(best_mean, 3)}')
 
-plt.figure()
-plt.plot(t, power_vals)
-plt.plot(t, best_power_vals)
-plt.xlabel("Time (s)")
-plt.ylabel("cos(theta(normal vector(t), sun_vector))")
-plt.title("Simulated power generation")
-plt.grid(True)
-plt.show()
+
+if find_best_rot_vec == True:
+    print(f'The optimal vector for v0 is {optimal_rot_vec}, which gives the mean value {round(best_mean, 3)}')
+    plt.figure()
+    plt.plot(t, power_vals)
+    plt.plot(t, best_power_vals)
+    plt.xlabel("Time [s]")
+    plt.ylabel("Power [mW]")
+    plt.title("Simulated power generation")
+    plt.grid(True)
+    plt.show()
+else: 
+    plt.figure()
+    plt.plot(t, power_vals)
+    plt.xlabel("Time [s]")
+    plt.ylabel("Power [mW]")
+    plt.title("Simulated power generation")
+    plt.grid(True)
+    plt.show()
