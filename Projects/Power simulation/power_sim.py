@@ -1,5 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
+import random
 
 """
 Satellite solar-panel pointing / power simulation (constant angular-rate rotation)
@@ -123,24 +124,31 @@ Notes / common pitfalls
 
 """
 # inputs
-v0 = [1, 0, 0]                                  # initial vector
-omega_xyz = [0,0,0]      # angular velocity
-
+v0 = [0.604, 0.797, 0.58]                                  # initial vector
+omega_xyz = [0.5, 6, 0.2]      # angular velocity
+random_tumbling = True
 find_best_rot_vec = False     
-
-deployed = ""
-if deployed == "n":
-    areal = 0.1
-else: 
-    areal = 0.3
-
-max_power = areal*10*7270                       #Max power generation
-innstrålet_over_areal = 1361000*0.3*areal*0.295 #Stråling*areal*effektivitet
-time = 100                                   #Simulasjonstid i sekunder
+deployed = True
+time = 80                                   #Simulasjonstid i sekunder
 d_time = 0.2                                    #time steps
 sun_vector = (1.0, 0.0, 0.0)                    #sun vector ref.
 
 
+if deployed == True:
+    areal = 0.3
+else: 
+    areal = 0.1
+
+max_power = areal*10*7270                       #Max power generation
+innstrålet_over_areal = 1361000*0.3*areal*0.295 #Stråling*areal*effektivitet
+
+v0_x, v0_y, v0_z = random.randint(0, 10), random.randint(0, 10), random.randint(0, 10)
+tumbling_x, tumbling_y, tumbling_z = random.randint(0, 10), random.randint(0, 10), random.randint(0, 10)
+
+if random_tumbling == True: 
+    v0 = [v0_x, v0_y, v0_z]
+    omega_xyz = [tumbling_x, tumbling_y, tumbling_z]
+    print(v0, )
 # functions
 def rodrigues_rotation_matrix(axis, angle):
     axis = np.asarray(axis, dtype=float)
@@ -247,6 +255,6 @@ else:
     plt.plot(t, power_vals)
     plt.xlabel("Time [s]")
     plt.ylabel("Power [mW]")
-    plt.title("Simulated power generation")
+    plt.title("Simulated power generation, theta = 52,8")
     plt.grid(True)
     plt.show()
